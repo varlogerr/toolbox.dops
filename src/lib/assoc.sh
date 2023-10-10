@@ -1,23 +1,130 @@
 # {{ SHLIB_EXT_CMDS }} {{/ SHLIB_EXT_CMDS }}
 
+shlib_meta_docblock_SHLIB_ASSOC_PUT() {
+  shlib_meta_description "
+    Put VALUE to associative store under PATH.
+  "
+  shlib_meta_usage  "{{ CMD }} PATH... <<< VALUE"
+  shlib_meta_rc     0 "OK" -- 2 "Invalid input"
+  shlib_meta_demo "
+    # Put values
+    {{ CMD }} foo <<< Bar
+    {{ CMD }} info block1 <<< "Content 1"
+    {{ CMD }} info block2 <<< "Content 2"
+    {{ CMD }} info block3 sub-block <<< "Content 2 in sub-block"
+  "
+}
+shlib_meta_docblock_SHLIB_ASSOC_GET() {
+  shlib_meta_description "
+    Get value stored under PATH in associative store.
+  "
+  shlib_meta_usage  "{{ CMD }} PATH..."
+  shlib_meta_rc     0 "OK" -- 1 "KEY is not found" -- 2 "Invalid input"
+  # shellcheck disable=SC2016
+  shlib_meta_demo '
+    {{ @SHLIB_ASSOC_PUT }}{{/ @SHLIB_ASSOC_PUT }}
+
+    {{ CMD }} foobar || {
+      echo "No foobar key"
+    }                       # STDOUT: `No foobar key`
+
+    {{ CMD }} foo           # STDOUT: `Bar`
+    {{ CMD }} info block2   # STDOUT: `Content 2`
+
+    {{ CMD }} info
+    ```STDOUT:
+      # 3 rows of:
+      BASE64_ENCODED_REST_OF_THE_PATH:BASE64_ENCODED_VALUE
+    ```
+  '
+}
+shlib_meta_docblock_SHLIB_ASSOC_RM() {
+  shlib_meta_description "
+    Remove PATH from associative store.
+  "
+  shlib_meta_usage  "{{ CMD }} PATH..."
+  shlib_meta_rc     0 "OK" -- 2 "Invalid input"
+}
+shlib_meta_docblock_SHLIB_ASSOC_IS_ASSOC() {
+  shlib_meta_description "
+    Check if VALUE is assoc.
+  "
+  shlib_meta_usage  "{{ CMD }} <<< VALUE"
+  shlib_meta_rc     0 "It's assoc" -- 1 "It's not assoc" -- 2 "Invalid input"
+  # shellcheck disable=SC2016
+  shlib_meta_demo '
+    {{ @SHLIB_ASSOC_PUT }}{{/ @SHLIB_ASSOC_PUT }}
+
+    ({{ CMD@SHLIB_ASSOC_GET }} info | {{ CMD }}) && echo 'Yes'
+    # STDOUT: `Yes`
+
+    ({{ CMD@SHLIB_ASSOC_GET }} info block1 | {{ CMD }} || echo 'No'
+    # STDOUT: `No`
+  '
+}
+shlib_meta_docblock_SHLIB_ASSOC_KEYS() {
+  shlib_meta_description "
+    List PATHs from assoc VALUE. PATHs are returned in KEY[:SUBKEY]...
+    format with ':' escaped in KEY / SUBKEY (':' -> '\:'). One PATH
+    by line (unless PATH contains new line).
+  "
+  shlib_meta_usage  "
+    # Check in the assoc store
+    {{ CMD }}
+
+    # Check in the passed VALUE
+    {{ CMD }} - <<< VALUE
+  "
+  shlib_meta_rc     0 OK -- 1 "It's not assoc" -- 2 "Invalid input"
+  # shellcheck disable=SC2016
+  shlib_meta_demo '
+    {{ @SHLIB_ASSOC_PUT }}{{/ @SHLIB_ASSOC_PUT }}
+
+    {{ CMD }}
+    ```STDOUT:
+      foo:
+      info:block1:
+      info:block2:
+      info:block3:sub-block:
+    ```
+
+    ({{ CMD@SHLIB_ASSOC_GET }} info block3 | {{ CMD }} -     # STDOUT: `sub-block:`
+    ({{ CMD@SHLIB_ASSOC_GET }} foo | {{ CMD }} - || echo No  # STDOUT: `No`
+  '
+}
+shlib_meta_docblock_SHLIB_ASSOC_PRINT() {
+  shlib_meta_description "
+    Same as shlib_assoc_keys, but with base64 encoded VALUEs.
+    Format: KEY[:SUBKEY...]:BASE64_VALUE
+  "
+  shlib_meta_usage  "
+    # Print decoded assoc store
+    {{ CMD }}
+
+    # Print decoded passed VALUE
+    {{ CMD }} - <<< VALUE
+  "
+  shlib_meta_rc     0 OK -- 1 "It's not assoc" -- 2 "Invalid input"
+}
+
 # {{ SHLIB_KEEP = SHLIB_EXT_VARS }}
   declare -g SHLIB_ASSOC_STORE_8jHoB
   # Can't contain ':'
   declare -g SHLIB_ASSOC_PREFIX_8jHoB='#&J)#cK'\''/g~~6[q!|)yQyY|F?*<d%Sa&0U'
 # {{/ SHLIB_KEEP }}
 
-# USAGE:
-#   shlib_assoc_put KEY [SUBKEY]... <<< VALUE
-# RC:
-#   0 - all is fine
-#   2 - invalid input
 shlib_assoc_put() {
+  declare -a ERRBAG
+
   declare -a keys; keys=("${@}"); [[ ${#keys[@]} -gt 0 ]] || {
-    echo "[${FUNCNAME[0]}:err] KEY is required." >&2
-    return 2
+    ERRBAG+=("[${FUNCNAME[0]}:err] KEY is required.")
   }
   declare val; val="$(set -o pipefail; timeout 0.2 cat | _shlib_assoc_encode false)" || {
-    echo "[${FUNCNAME[0]}:err] VALUE is required." >&2
+    ERRBAG+=("[${FUNCNAME[0]}:err] VALUE is required.")
+  }
+
+  [[ ${#ERRBAG[@]} -lt 1 ]] || {
+    printf -- '%s\n' "${ERRBAG[@]}" >&2
     return 2
   }
 
@@ -39,12 +146,6 @@ shlib_assoc_put() {
   SHLIB_ASSOC_STORE_8jHoB+="${SHLIB_ASSOC_STORE_8jHoB:+${SHLIB_NL}}${paths[*]: -1}:${val}"
 }
 
-# USAGE:
-#   shlib_assoc_get KEY [SUBKEY]...
-# RC:
-#   0 - all is fine
-#   1 - KEY is not found
-#   2 - invalid input
 shlib_assoc_get() {
   [[ $# -gt 0 ]] || {
     echo "[${FUNCNAME[0]}:err] KEY is required." >&2
@@ -66,11 +167,6 @@ shlib_assoc_get() {
   "${filter[@]}" <<< "${val}"
 }
 
-# USAGE:
-#   shlib_assoc_rm KEY [SUBKEY]...
-# RC:
-#   0 - all is fine
-#   2 - invalid input
 shlib_assoc_rm() {
   [[ $# -gt 0 ]] || {
     echo "[${FUNCNAME[0]}:err] KEY is required." >&2
@@ -86,12 +182,6 @@ shlib_assoc_rm() {
     <<< "${SHLIB_ASSOC_STORE_8jHoB}")"
 }
 
-# USAGE:
-#   shlib_assoc_is_assoc <<< VALUE
-# RC:
-#   0 - it's an assoc
-#   1 - it's not an assoc
-#   2 - invalid input
 shlib_assoc_is_assoc() {
   declare val; val="$(timeout 0.2 cat)" || {
     echo "[${FUNCNAME[0]}:err] VALUE is required." >&2
@@ -104,20 +194,6 @@ shlib_assoc_is_assoc() {
   )" == "${SHLIB_ASSOC_PREFIX_8jHoB}:"* ]]
 }
 
-# KEYs are returned in KEY[:SUBKEY...] format with
-# ':' escaped in KEY/SUBKEY (':' -> '\:'). Single
-# PATH by line (unless keys contain new lines)
-#
-# USAGE:
-#   # Check in the assoc store
-#   shlib_assoc_keys
-#
-#   # Check in the passed VALUE
-#   shlib_assoc_keys - <<< VALUE
-# RC:
-#   0 - all is find
-#   1 - it's not an assoc
-#   2 - invalid input
 shlib_assoc_keys() {
   declare assoc="${SHLIB_ASSOC_STORE_8jHoB}"
   [[ "${1}" != '-' ]] || assoc="$(timeout 0.2 cat)" || {
@@ -134,19 +210,6 @@ shlib_assoc_keys() {
   sed 's/$/:/' <<< "${result}"
 }
 
-# Same as shlib_assoc_keys, but with base64 encoded
-# VALUEs. format: KEY[:SUBKEY...]:BASE64_VALUE
-#
-# USAGE:
-#   # Print decoded assoc store
-#   shlib_assoc_print
-#
-#   # Print decoded passed VALUE
-#   shlib_assoc_print - <<< VALUE
-# RC:
-#   0 - all is find
-#   1 - it's not an assoc
-#   2 - invalid input
 shlib_assoc_print() {
   declare assoc="${SHLIB_ASSOC_STORE_8jHoB}"
   [[ "${1}" != '-' ]] || assoc="$(timeout 0.2 cat)" || {

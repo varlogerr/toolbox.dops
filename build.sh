@@ -229,6 +229,10 @@ _iife() {
     # {{ SHLIB_KEEP = SHLIB_VARS }}
       SHLIB_LOG_TOOLNAME="${SHLIB_LOG_TOOLNAME-shlib}"
     # {{/ SHLIB_KEEP }}
+    # {{ SHLIB_KEEP = SHLIB_EXT_VARS }}
+      declare -g SHLIB_META_PREFIX_8jHoB='#X;Oq/M$p8'
+      declare -g _SHLIB_META_FNAME
+    # {{/ SHLIB_KEEP }}
     # {{ SHLIB_EXT_CMDS }}
       _shlib_assoc_encode ()
       {
@@ -250,6 +254,31 @@ _iife() {
       _shlib_assoc_esckey ()
       {
           sed 's/\//\\&/g'
+      }
+      _shlib_meta ()
+      {
+          declare upstream="${1}";
+          shift;
+          declare fname;
+          if [[ -n "${_SHLIB_META_FNAME+x}" ]]; then
+              fname="${_SHLIB_META_FNAME}";
+          else
+              if [[ -n "${1+x}" ]]; then
+                  fname="${1}";
+                  shift;
+              else
+                  echo "[${upstream}:err] FUNC_NAME is required." 1>&2;
+                  return 2;
+              fi;
+          fi;
+          declare -a token=("${SHLIB_META_PREFIX_8jHoB}" "${upstream}" "${fname}");
+          [[ -n "${1+x}" ]] && {
+              shlib_assoc_put "${token[@]}" <<< "$(
+              text_strip "${@}"
+            )";
+              return
+          };
+          shlib_assoc_get "${token[@]}"
       }
       shlib_assoc_get ()
       {
@@ -314,15 +343,18 @@ _iife() {
       }
       shlib_assoc_put ()
       {
+          declare -a ERRBAG;
           declare -a keys;
           keys=("${@}");
           [[ ${#keys[@]} -gt 0 ]] || {
-              echo "[${FUNCNAME[0]}:err] KEY is required." 1>&2;
-              return 2
+              ERRBAG+=("[${FUNCNAME[0]}:err] KEY is required.")
           };
           declare val;
           val="$(set -o pipefail; timeout 0.2 cat | _shlib_assoc_encode false)" || {
-              echo "[${FUNCNAME[0]}:err] VALUE is required." 1>&2;
+              ERRBAG+=("[${FUNCNAME[0]}:err] VALUE is required.")
+          };
+          [[ ${#ERRBAG[@]} -lt 1 ]] || {
+              printf -- '%s\n' "${ERRBAG[@]}" 1>&2;
               return 2
           };
           declare -a paths;
@@ -348,6 +380,107 @@ _iife() {
             _shlib_assoc_encode true "${@}" | _shlib_assoc_esckey
           )";
           SHLIB_ASSOC_STORE_8jHoB="$(set -x; grep -v "^${path}:"       <<< "${SHLIB_ASSOC_STORE_8jHoB}")"
+      }
+      shlib_meta_demo ()
+      {
+          _shlib_meta "${FUNCTION[0]}" "${@}"
+      }
+      shlib_meta_description ()
+      {
+          _shlib_meta "${FUNCTION[0]}" "${@}"
+      }
+      shlib_meta_docblock_SHLIB_ASSOC_COMMONDOC ()
+      {
+          shlib_meta_demo "
+            # Put values
+            shlib_assoc_put foo <<< BAR
+            shlib_assoc_put info block1 <<< "Content 1"
+            shlib_assoc_put info block2 <<< "Content 2"
+          "
+      }
+      shlib_meta_docblock_SHLIB_ASSOC_GET ()
+      {
+          shlib_meta_description "
+            Get value stored under PATH in associative store.
+          ";
+          shlib_meta_usage "{{ CMD }} PATH...";
+          shlib_meta_rc 0 "OK" -- 1 "KEY is not found" -- 2 "Invalid input";
+          shlib_meta_demo '
+            {{ @SHLIB_ASSOC_COMMONDOC }}{{/ @SHLIB_ASSOC_COMMONDOC }}
+
+            {{ CMD }} foobar || echo "No foobar key"
+            ```STDOUT
+            No foobar key
+            ```
+          '
+      }
+      shlib_meta_docblock_SHLIB_ASSOC_IS_ASSOC ()
+      {
+          shlib_meta_description "
+            Check if VALUE is assoc.
+          ";
+          shlib_meta_usage "{{ CMD }} <<< VALUE";
+          shlib_meta_rc 0 "It's assoc" -- 1 "It's not assoc" -- 2 "Invalid input"
+      }
+      shlib_meta_docblock_SHLIB_ASSOC_KEYS ()
+      {
+          shlib_meta_description "
+            List keys from assoc VALUE. KEYs are returned in KEY[:SUBKEY]...
+            format with ':' escaped in KEY / SUBKEY (':' -> '\:'). One PATH
+            by line (unless PATH contains new line).
+          ";
+          shlib_meta_usage "
+            # Check in the assoc store
+            {{ CMD }}
+
+            # Check in the passed VALUE
+            {{ CMD }} - <<< VALUE
+          ";
+          shlib_meta_rc 0 OK -- 1 "It's not assoc" -- 2 "Invalid input"
+      }
+      shlib_meta_docblock_SHLIB_ASSOC_PRINT ()
+      {
+          shlib_meta_description "
+            Same as shlib_assoc_keys, but with base64 encoded VALUEs.
+            Format: KEY[:SUBKEY...]:BASE64_VALUE
+          ";
+          shlib_meta_usage "
+            # Print decoded assoc store
+            {{ CMD }}
+
+            # Print decoded passed VALUE
+            {{ CMD }} - <<< VALUE
+          ";
+          shlib_meta_rc 0 OK -- 1 "It's not assoc" -- 2 "Invalid input"
+      }
+      shlib_meta_docblock_SHLIB_ASSOC_PUT ()
+      {
+          shlib_meta_description "
+            Put VALUE to associative store under PATH.
+          ";
+          shlib_meta_usage "{{ CMD }} PATH... <<< VALUE";
+          shlib_meta_rc 0 "OK" -- 2 "Invalid input";
+          shlib_meta_demo "{{ @SHLIB_ASSOC_COMMONDOC }}{{/ @SHLIB_ASSOC_COMMONDOC }}"
+      }
+      shlib_meta_docblock_SHLIB_ASSOC_RM ()
+      {
+          shlib_meta_description "
+            Remove PATH from associative store.
+          ";
+          shlib_meta_usage "{{ CMD }} PATH...";
+          shlib_meta_rc 0 "OK" -- 2 "Invalid input"
+      }
+      shlib_meta_more ()
+      {
+          _shlib_meta "${FUNCTION[0]}" "${@}"
+      }
+      shlib_meta_rc ()
+      {
+          _shlib_meta "${FUNCTION[0]}" "${@}"
+      }
+      shlib_meta_usage ()
+      {
+          _shlib_meta "${FUNCTION[0]}" "${@}"
       }
     # {{/ SHLIB_EXT_CMDS }}
     _cache ()
