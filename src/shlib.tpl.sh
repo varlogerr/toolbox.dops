@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# {{ SHLIB_EXT_DOCBLOCK }} {{/ SHLIB_EXT_DOCBLOCK }}
 # {{ SHLIB_EXT_VARS }} {{/ SHLIB_EXT_VARS }}
 # {{ SHLIB_EXT_CMDS }} {{/ SHLIB_EXT_CMDS }}
 
