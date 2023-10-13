@@ -1,5 +1,7 @@
 # {{ SHLIB_KEEP = SHLIB_VARS }}
-  declare CACHE_DIR_Fm4dq="/tmp/shlib.Fm4dq.$(id -u)"
+  # Cache directory for 'file' driver
+  declare CACHE_DIR_Fm4dq; CACHE_DIR_Fm4dq="/tmp/shlib.Fm4dq.$(id -u)"
+  # Cache variable for 'var' driver (currently unused)
   declare -A SHLIB_CACHE_Fm4dq
 # {{/ SHLIB_KEEP }}
 

@@ -1,42 +1,44 @@
 # {{ SHLIB_EXT_CMDS }} {{/ SHLIB_EXT_CMDS }}
 
 # {{ SHLIB_KEEP = SHLIB_EXT_VARS }}
+  # Meta assoc prefix-key
   declare -g SHLIB_META_PREFIX_8jHoB='#X;Oq/M$p8'
+  # Function name currently being described
   declare -g SHLIB_META_FNAME
 # {{/ SHLIB_KEEP }}
 
 # {{ SHLIB_KEEP = SHLIB_EXT_DOCBLOCK }}
-#   For all shlib_meta_* functions that require FNAME it can be
-#   passed via 'SHLIB_META_FNAME' env variable, I.e.
-#   ```sh
-#   SHLIB_META_FNAME=myfunc shlib_meta_* [ARGS]...
-#   # instead of
-#   shlib_meta_* myfunc [ARGS]...
-#   ```
-#
-#   * shlib_meta_description
-#   * shlib_meta_usage
-#   * shlib_meta_demo
-#   * shlib_meta_more
-#     USAGE:
-#       # Set meta prop
-#       shlib_meta_* FNAME TEXT...
-#       shlib_meta_* FNAME <<< TEXT
-#
-#       # Get meta prop
-#       shlib_meta_* FNAME
-#
-#   * shlib_meta_rc
-#     USAGE:
-#       # Set meta prop
-#       shlib_meta_rc FNAME RC DESCRIPTION... [-- RC DESCRIPTION]...
-#       shlib_meta_rc FNAME RC - <<< DESCRIPTION
-#
-#       # Get description for a specific RC
-#       shlib_meta_rc FNAME RC
-#       # Get description for all RCs
-#       shlib_meta_rc FNAME
-# {{ SHLIB_KEEP }}
+  # For all shlib_meta_* functions that require FNAME it can be
+  # passed via 'SHLIB_META_FNAME' env variable, I.e.
+  # ```sh
+  # SHLIB_META_FNAME=myfunc shlib_meta_* [ARGS]...
+  # # instead of
+  # shlib_meta_* myfunc [ARGS]...
+  # ```
+  #
+  # * shlib_meta_description
+  # * shlib_meta_usage
+  # * shlib_meta_demo
+  # * shlib_meta_more
+  #   USAGE:
+  #     # Set meta prop
+  #     shlib_meta_* FNAME TEXT...
+  #     shlib_meta_* FNAME <<< TEXT
+  #
+  #     # Get meta prop
+  #     shlib_meta_* FNAME
+  #
+  # * shlib_meta_rc
+  #   USAGE:
+  #     # Set meta prop
+  #     shlib_meta_rc FNAME RC DESCRIPTION... [-- RC DESCRIPTION]...
+  #     shlib_meta_rc FNAME RC - <<< DESCRIPTION
+  #
+  #     # Get description for a specific RC
+  #     shlib_meta_rc FNAME RC
+  #     # Get description for all RCs
+  #     shlib_meta_rc FNAME
+# {{/ SHLIB_KEEP }}
 
 shlib_meta_description()  { _shlib_meta "${@}"; }
 shlib_meta_usage()        { _shlib_meta "${@}"; }

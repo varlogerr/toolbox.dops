@@ -1,4 +1,5 @@
 # {{ SHLIB_KEEP = SHLIB_VARS }}
+  # Logger tool name
   SHLIB_LOG_TOOLNAME="${SHLIB_LOG_TOOLNAME-shlib}"
 # {{/ SHLIB_KEEP }}
 

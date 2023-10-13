@@ -33,7 +33,7 @@ text_offset() {
   declare expression='s/^/'"${offset}"'/'
   ${OPT_FIRST} && expression="1 ${expression}"
   (for t in "${ARG_TEXT[@]}"; do
-    sed -e "${expression}" <<< "${t}"
+    sed -e "${expression}" -e 's/^\s\+$//' <<< "${t}"
   done)
 }
 
@@ -67,6 +67,6 @@ text_strip() {
     # Calculate first line offset
     offset="$(head -n 1 <<< "${t}" | sed -e 's/^\(\s*\).*/\1/' | wc -m)"
     # Trim offset
-    sed -e 's/^\s\{0,'$((offset - 1))'\}//' <<< "${t}"
+    sed -e 's/^\s\{0,'$((offset - 1))'\}//' -e 's/^\s\+$//' <<< "${t}"
   done
 }

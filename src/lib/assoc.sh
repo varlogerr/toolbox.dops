@@ -108,6 +108,7 @@ shlib_meta_docblock_SHLIB_ASSOC_PRINT() {
 }
 
 # {{ SHLIB_KEEP = SHLIB_EXT_VARS }}
+  # Assoc storage
   declare -g SHLIB_ASSOC_STORE_8jHoB
   # Can't contain ':'
   declare -g SHLIB_ASSOC_PREFIX_8jHoB='#&J)#cK'\''/g~~6[q!|)yQyY|F?*<d%Sa&0U'
