@@ -3,6 +3,7 @@
 Description
 
 * [Quick demo](#quick-demo)
+* [Requirements](#requirements)
 * [Installation](#installation)
 * [Usage](#usage)
 * [Development notes](#usage)
@@ -12,6 +13,13 @@ Description
 ```sh
 # quick demo commands
 ```
+
+[To top]
+
+## Requirements
+
+* `bash`
+* `mktemp` (GNU)
 
 [To top]
 

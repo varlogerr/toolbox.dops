@@ -7,6 +7,82 @@
   declare -g SHLIB_META_FNAME
 # {{/ SHLIB_KEEP }}
 
+# {{ DRAFT }}
+# * +
+#   Options separator
+# * NAME
+#   Option name.
+#   Internally in described function converted
+#   'NAME' => 'OPT_NAME' i.e. prefixes with 'OPT_'.
+# * :-o
+#   Short option flag.
+#   Can't contain '='.
+# * :--option
+#   Long option flag.
+#   Can't contain '='.
+# * --flag
+#   Option is flag (without value).
+#   Internally in described function value becomes bool with
+#   'false` for default.
+# * --multi
+#   Multiple occurrence allowed.
+#   In docs option is appended with '...', i.e. '[-o]...'.
+#   Internally in described function represented as array.
+#   Conflicts with `--flag`.
+# * --kv
+#   Means that expected value is KEY=VALUE, allowed formats:
+#     * `--option kEY=VALUE`
+#     * `--option kEY VALUE`
+#     * `--option=kEY=VALUE`
+#     * `--option=kEY VALUE`
+#   Internally in described function value is always converted to
+#   'KEY=VALUE', or in combination with `--multi` to `KEY=VALUE` array
+#   'false` for default.
+#   Conflicts with `--flag`.
+# * --hint
+#   Hint for value.
+#   In docs in combination with first met flag converts to '-o HINT'.
+#   Default hint is option name 'NAME'.
+#   Conflicts with `--flag`.
+# * --default
+#   Default value.
+#   In docs in combination with first met flag converts to "[-o 'DEFAULT']".
+#   Internally in described function 'OPT_NAME' var defaults to 'DEFAULT'.
+#   Conflicts with `--flag`, `--hint` and `--multi`.
+# * --description
+#   Option description.
+# shlib_meta_opt
+#   + NAME [:-o] [:--option] [--flag] [--multi] [--kv] [--hint HINT] \
+#     [--default DEFAULT] [--description DESCRIPTION]
+#
+# * +
+#   Arguments separator
+# * NAME
+#   Argument name.
+#   Internally in described function converted
+#   'NAME' => 'ARG_NAME' i.e. prefixes with 'ARG_'.
+# * --multi
+#   Multiple occurrence allowed.
+#   In docs option is appended with '...', i.e. 'ARG...'.
+#   Internally in described function represented as array.
+#   Conflicts with previous `--multi` ARG for described function.
+# * --optional
+#   Optional argument.
+#   In docs converts 'NAME' => '[NAME]'.
+#   Conflicts with followed non-optional ARG.
+# * --default
+#   Argument's default value.
+#   In docs converts 'NAME' => "NAME='DEFAULT'".
+#   Implicitly makes the ARG optional.
+# * --stdin
+#   Read from stdin if not provided.
+#   In docs creates new USAGE demo with NAME from stdin instead of ARG.
+#   Conflicts with `--default` and `--optional`
+# shlib_meta_arg \
+#   + NAME [--multi] [--optional] [--default DEFAULT] [--stdin] \
+#     [--description DESCRIPTION]
+# {{/ DRAFT }}
+
 # {{ SHLIB_KEEP = SHLIB_EXT_DOCBLOCK }}
   # For all shlib_meta_* functions that require FNAME it can be
   # passed via 'SHLIB_META_FNAME' env variable, I.e.
